@@ -1,6 +1,6 @@
-import { Controller, Post, Body, Request, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { ApiResponse } from '../common/api-response';
 
 @Controller('auth')
 export class AuthController {
@@ -10,19 +10,15 @@ export class AuthController {
   async login(@Body() body: { email: string; password: string }) {
     const user = await this.authService.validateUser(body.email, body.password);
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      return ApiResponse.error('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
-    return this.authService.login(user);
+    const token = await this.authService.login(user);
+    return ApiResponse.success(token, 'Login successful');
   }
 
   @Post('register')
   async register(@Body() body: { name: string; email: string; password: string }) {
-    return this.authService.register(body.name, body.email, body.password);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('test')
-  async test(@Request() req) {
-    return { message: 'You have access!', user: req.user };
+    const newUser = await this.authService.register(body.name, body.email, body.password);
+    return ApiResponse.success(newUser, 'User registered successfully', HttpStatus.CREATED);
   }
 }
