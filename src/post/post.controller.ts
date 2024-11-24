@@ -14,15 +14,17 @@ import { CreatePostDto } from "./dto/create-post.dto";
 import { UpdatePostDto } from "./dto/update-post.dto";
 import { ApiResponse } from "../common/api-response";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { User } from "src/decorators/user.decorator";
+// import { CheckIdExistsGuard } from "src/decorators/checkID.decorator";
 
 @UseGuards(JwtAuthGuard)
 @Controller("posts")
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @Post()
-  async createPost(@Body() createPostDto: CreatePostDto) {
-    const post = await this.postService.createPost(createPostDto);
+  @Post("/create")
+  async createPost(@Body() createPostDto: CreatePostDto, @User() user: any) {
+    const post = await this.postService.createPost(createPostDto, user);
     return ApiResponse.success(
       post,
       "Post created successfully",
@@ -30,13 +32,13 @@ export class PostController {
     );
   }
 
-  @Get()
+  @Get("/getall")
   async getPosts() {
     const posts = await this.postService.getPosts();
     return ApiResponse.success(posts, "Posts retrieved successfully");
   }
 
-  @Get(":id")
+  @Get("/get/:id")
   async getPostById(@Param("id") id: string) {
     const post = await this.postService.getPostById(Number(id));
     if (!post) {
@@ -45,7 +47,7 @@ export class PostController {
     return ApiResponse.success(post, "Post retrieved successfully");
   }
 
-  @Put(":id")
+  @Put("/update/:id")
   async updatePost(
     @Param("id") id: string,
     @Body() updatePostDto: UpdatePostDto,
@@ -63,7 +65,7 @@ export class PostController {
     return ApiResponse.success(updatedPost, "Post updated successfully");
   }
 
-  @Delete(":id")
+  @Delete("/delete/:id")
   async deletePost(@Param("id") id: string) {
     const result = await this.postService.deletePost(Number(id));
     if (!result) {
@@ -74,5 +76,12 @@ export class PostController {
       "Post deleted successfully",
       HttpStatus.NO_CONTENT,
     );
+  }
+
+  // @UseGuards(CheckIdExistsGuard)
+  @Get("/userpost")
+  async getPostUser(@User() user: any) {
+    const posts = await this.postService.getPostUser(user.id);
+    return ApiResponse.success(posts, "Posts retrieved successfully");
   }
 }

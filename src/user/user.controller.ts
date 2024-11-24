@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, HttpStatus, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiResponse } from '../common/api-response';
+import { CheckIdExistsGuard } from 'src/decorators/checkID.decorator';
 
 @Controller('users')
 export class UserController {
@@ -21,15 +22,14 @@ export class UserController {
   }
 
   @Get(':id')
+  @UseGuards(CheckIdExistsGuard)
   async getUserById(@Param('id') id: string) {
     const user = await this.userService.findUserById(Number(id));
-    if (!user) {
-      return ApiResponse.error('User not found', HttpStatus.NOT_FOUND);
-    }
     return ApiResponse.success(user, 'User retrieved successfully');
   }
 
   @Put(':id')
+  @UseGuards(CheckIdExistsGuard)
   async updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -39,6 +39,7 @@ export class UserController {
   }
 
   @Delete(':id')
+  @UseGuards(CheckIdExistsGuard)
   async deleteUser(@Param('id') id: string) {
     await this.userService.deleteUser(Number(id));
     return ApiResponse.success(null, 'User deleted successfully', HttpStatus.NO_CONTENT);

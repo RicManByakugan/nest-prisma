@@ -1,17 +1,19 @@
 import { Controller, Post, Body, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiResponse } from '../common/api-response';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login')
-  async login(@Body() body: { email: string; password: string }) {
-    const user = await this.authService.validateUser(body.email, body.password);
+  async login(@Body() loginDto: LoginDto) {
+    const user = await this.authService.validateUser(loginDto.email, loginDto.password);
     if (!user) {
       return ApiResponse.error('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
+
     const token = await this.authService.login(user);
     return ApiResponse.success(token, 'Login successful');
   }
